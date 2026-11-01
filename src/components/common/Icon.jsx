@@ -138,3 +138,21 @@ export function Lock({ size = 12 }) {
     </svg>
   )
 }
+
+export function PanelLeft({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2.5" y="3.5" width="15" height="13" rx="2"/>
+      <path d="M7.5 3.5v13"/>
+    </svg>
+  )
+}
+
+export function Share({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10 12V2.5m-3 3 3-3 3 3"/>
+      <path d="M6 8H4.5A1.5 1.5 0 0 0 3 9.5v6A1.5 1.5 0 0 0 4.5 17h11a1.5 1.5 0 0 0 1.5-1.5v-6A1.5 1.5 0 0 0 15.5 8H14"/>
+    </svg>
+  )
+}

@@ -13,6 +13,8 @@
 | Chat Canvas | `#FFFFFF` | Main area where chat messages are displayed |
 | Agents Rail | `#FAFAFA` | Right-side rail for per-conversation agents |
 | Channel Thread Rail | `#FFFFFF` | Right-side rail for a channel post's replies |
+| Copilot Navigation | `#F5F5F5` | Microsoft 365 Copilot sidebar, inside the Teams frame |
+| Copilot Workspace | `#FFFFFF` | Full-app Copilot canvas; replaces the chat list and canvas, not Teams chrome |
 
 The title bar, app bar, and chat list form a cool neutral palette that matches current Microsoft Teams. The chat list is slightly lighter than the chrome so its surface reads as a container nested inside it. The search bar is the lightest surface in the header, floating on top of the title bar.
 
@@ -109,7 +111,29 @@ Before adding an icon inline, check `src/components/common/Icon.jsx` — the sha
 - **Size:** 24×24 SVG inside a 28×28 wrap (larger than Teams' typical 20px — the icons read more clearly at this size and the prototype skews the detail up slightly)
 - **Inactive state:** Outlined icons, `#666666`
 - **Active state:** Filled icons, Teams purple (`#5B5FC7`); same color drives a 3px left-edge active indicator spanning the **full height of the nav-item row** (flush top to bottom, not capped) and an 8% tinted background fill (`rgba(91, 95, 199, 0.08)`)
-- **Clickable surfaces:** `chat` and `activity` toggle the left pane (ChatList ↔ ActivityList). Others are decorative for now.
+- **Clickable surfaces:** `chat` and `activity` toggle the left pane (ChatList ↔ ActivityList). `copilot`, below Calls, opens the full Copilot workspace. Others are decorative for now.
+
+## Copilot in Teams
+
+Copilot follows the Microsoft 365 Copilot chat layout embedded below the Teams title bar and to the right of the Teams app bar. Keep both pieces of Teams chrome visible; this is an app surface, not a 1:1 chat or a browser iframe.
+
+- **Navigation:** 260px neutral sidebar with Microsoft 365 Copilot branding, New chat, conversation search, Chat, pinned agents, and recent conversations. Use inset rounded hover/selected rows.
+- **Header:** 64px with sidebar toggle, app/agent name, and a rounded Work/Web grounding control.
+- **Empty state:** centered Copilot logo, greeting, 30px/600 heading, prompt composer, then three scenario-specific suggestion cards. Do not hardcode the current user's name.
+- **Composer:** 16px radius, thin neutral border, purple focus ring, reference action, and circular purple send button. Enter sends; Shift+Enter adds a line.
+- **Conversation:** right-aligned user prompts on `#E8EBFA`; unboxed Copilot answers on white, with compact clickable Teams reference chips. The composer stays below the scrollable history.
+- **Prototype behavior:** use mocked Northwind context and label responses as sample data. Web mode must not imply access to work content or live web search.
+- **Responsive:** narrow the sidebar on smaller screens, stack suggestion cards below 800px, and allow the sidebar to be collapsed.
+
+### Dynamics MCP sharing demo
+
+- Launch in Copilot with Alex's Dynamics opportunity prompt prefilled. Guide Send, Share, and Open group chat with ephemeral `DemoArrow` hints.
+- The Dynamics MCP result is a **self-contained HTML widget**, not an Adaptive Card or screenshot. This scenario intentionally preserves the tool-returned HTML; render it with the shared `McpWidget` in both Copilot and Teams.
+- Widget anatomy: Dynamics 365 Sales heading, Dynamics MCP badge, potential-customer / topic / estimated-revenue table, USD total, and sample-data footer. Use existing neutral surfaces, dividers, typography, and Teams purple.
+- Isolate HTML in a scriptless, sandboxed iframe. Share the original message text and unchanged widget HTML, never rebuild a different Teams summary.
+- Share is a secondary action beneath the answer. It opens a Teams-style modal with group-chat search, single selection, Cancel, and Send. Preselect **Northwind Core** on every opening so Send is immediately enabled and guided, while allowing users to search and choose another group. Opening or cancelling the modal must not post a message.
+- Send posts the unchanged payload to the selected group. Confirm the actual destination without navigating automatically; the viewer clicks Open group chat or the guided group row. The modal traps focus, supports Escape dismissal, and guides its Send action after selection.
+- Teams displays the shared message as an incoming **Copilot** agent message. Mark the group unread on share, highlight the shared message on opening, and remove hints after their targets are clicked.
 
 ## Message Patterns
 

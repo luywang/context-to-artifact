@@ -83,6 +83,8 @@ export default function ChatView({
   updateSession,
   updateSessionMessages,
   dynamicSessionMessages,
+  extraMessages,
+  setExtraMessages,
   navIntent,
   clearNavIntent,
 }) {
@@ -102,7 +104,6 @@ export default function ChatView({
   const channelPosts = isChannel ? channelPostsByContact[activeChatId] || [] : null
   const hasSessions = isAgent && sessions[activeChatId]
 
-  const [extraMessages, setExtraMessages] = useState({})
   const [inputValue, setInputValue] = useState(parsedDraft.text)
   const [composeMention, setComposeMention] = useState(parsedDraft.mention)
   const [showSessions, setShowSessions] = useState(hasSessions)
@@ -157,7 +158,6 @@ export default function ChatView({
     if (intentMatches && navIntent.highlightMessageId) {
       setHighlightMessageId(navIntent.highlightMessageId)
     }
-    if (intentMatches) clearNavIntent()
   } else if (navIntent !== navIntentCursor && navIntent?.chatId === activeChatId) {
     setNavIntentCursor(navIntent)
     if ('sessionId' in navIntent) {
@@ -171,8 +171,11 @@ export default function ChatView({
     if (navIntent.highlightMessageId) {
       setHighlightMessageId(navIntent.highlightMessageId)
     }
-    clearNavIntent()
   }
+
+  useEffect(() => {
+    if (navIntent?.chatId === activeChatId) clearNavIntent()
+  }, [navIntent, activeChatId, clearNavIntent])
 
   useEffect(() => {
     if (highlightMessageId) {
@@ -238,7 +241,7 @@ export default function ChatView({
     const agentsByName = new Map(contacts.filter((c) => c.isAgent).map((a) => [a.name.toLowerCase(), a]))
     const found = new Map()
     if (activeContact.isAgent) found.set(activeContact.id, activeContact)
-    for (const m of baseMessages) {
+    for (const m of [...baseMessages, ...(extraMessages[activeChatId] || [])]) {
       if (agentsById.has(m.senderId)) found.set(m.senderId, agentsById.get(m.senderId))
       if (Array.isArray(m.text)) {
         for (const part of m.text) {

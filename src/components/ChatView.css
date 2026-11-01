@@ -77,6 +77,11 @@
   min-width: 0;
 }
 
+.message-row-widget .message-content-wrap {
+  width: 720px;
+  max-width: calc(100% - 40px);
+}
+
 /* Channel posts are typically longer (announcement-style) — give them a
    slightly wider bubble than regular chat bubbles so body copy doesn't
    wrap as aggressively. */

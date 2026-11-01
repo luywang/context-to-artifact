@@ -1,6 +1,14 @@
 import './NavRail.css'
 
-// Clickable items are `activity` and `chat` — the rest are decorative for now.
+const copilotIcon = (
+  <span
+    className="nav-copilot-icon"
+    style={{ '--copilot-icon': `url("${import.meta.env.BASE_URL}avatars/copilot-logo.png")` }}
+    aria-hidden="true"
+  />
+)
+
+// Calendar, Calls, and More are decorative for now.
 const navItems = [
   {
     id: 'activity',
@@ -63,6 +71,12 @@ const navItems = [
     ),
   },
   {
+    id: 'copilot',
+    label: 'Copilot',
+    outlineIcon: copilotIcon,
+    filledIcon: copilotIcon,
+  },
+  {
     id: 'more',
     label: 'More',
     outlineIcon: (
@@ -83,7 +97,7 @@ export default function NavRail({ activeView = 'chat', onSelectView, activityUnr
     <nav className="nav-rail">
       <div className="nav-items">
         {navItems.map((item) => {
-          const selectable = item.id === 'chat' || item.id === 'activity'
+          const selectable = ['chat', 'activity', 'copilot'].includes(item.id)
           const isActive = selectable && item.id === activeView
           const handleClick = selectable
             ? () => onSelectView?.(item.id)
@@ -97,6 +111,7 @@ export default function NavRail({ activeView = 'chat', onSelectView, activityUnr
               onClick={handleClick}
               aria-label={item.label}
               aria-pressed={isActive}
+              title={item.label}
             >
               <div className="nav-icon-wrap">
                 {isActive ? item.filledIcon : item.outlineIcon}

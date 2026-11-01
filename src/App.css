@@ -10,3 +10,13 @@
   display: flex;
   overflow: hidden;
 }
+
+.teams-workspace {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.teams-workspace[hidden] {
+  display: none;
+}

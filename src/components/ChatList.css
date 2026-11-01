@@ -227,6 +227,12 @@
   background: #FCFBFA;
 }
 
+.chat-demo-hint {
+  margin-left: auto;
+  display: flex;
+  pointer-events: none;
+}
+
 /* .avatar, .status-dot, .status-* now live in components/common/Avatar.css */
 /* Override the status-dot ring color so it blends with the chat list panel bg. */
 .chat-list-panel .status-dot {

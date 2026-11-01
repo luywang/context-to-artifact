@@ -1,0 +1,141 @@
+.share-teams-modal {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid #E8E8E8;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #242424;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.share-teams-modal::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.share-teams-panel {
+  padding: 24px;
+}
+
+.share-teams-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.share-teams-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+#share-teams-description {
+  margin: 12px 0 20px;
+  color: #616161;
+}
+
+.share-teams-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #BDBDBD;
+  border-radius: 4px;
+  color: #616161;
+}
+
+.share-teams-search:focus-within {
+  border-color: #5B5FC7;
+  box-shadow: 0 0 0 1px #5B5FC7;
+}
+
+.share-teams-search input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #242424;
+}
+
+.share-teams-results {
+  max-height: 260px;
+  overflow-y: auto;
+  margin-top: 16px;
+}
+
+.share-teams-chat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.share-teams-chat:hover,
+.share-teams-chat.selected {
+  background: #F5F5F5;
+}
+
+.share-teams-chat span {
+  flex: 1;
+}
+
+.share-teams-chat input {
+  width: 16px;
+  height: 16px;
+  accent-color: #5B5FC7;
+}
+
+.share-teams-selection,
+.share-teams-empty {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #616161;
+}
+
+.share-teams-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 44px;
+  margin-top: 24px;
+}
+
+.share-teams-footer button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 80px;
+  padding: 6px 16px;
+  border: 1px solid #BDBDBD;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.share-teams-cancel {
+  background: #FFFFFF;
+  color: #242424;
+}
+
+.share-teams-footer .share-teams-send {
+  border-color: #5B5FC7;
+  background: #5B5FC7;
+  color: #FFFFFF;
+}
+
+.share-teams-send-action {
+  position: relative;
+}
+
+.share-teams-send-hint {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  pointer-events: none;
+}

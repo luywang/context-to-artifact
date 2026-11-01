@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { agentLogos } from '../shared/agentLogos'
-import { contacts, currentUser } from '../data/contacts'
-import { Avatar, LinkCard, PrivateDisclaimer, Check, ChainOfThought } from './common'
+import { contacts, currentUser } from '../data'
+import { Avatar, LinkCard, PrivateDisclaimer, Check, ChainOfThought, McpWidget } from './common'
 import MessageActions from './MessageActions'
 
 // Office-app icon tiles for adaptive cards that represent generated artifacts.
@@ -191,7 +191,7 @@ export default function MessageRow({ message, activeContact, onOpenThread }) {
 
   return (
     <div
-      className={`message-row ${isMe ? 'message-mine' : ''}`}
+      className={`message-row ${isMe ? 'message-mine' : ''}${message.widget ? ' message-row-widget' : ''}`}
       data-message-id={message.id}
     >
       {!isMe && (
@@ -219,6 +219,7 @@ export default function MessageRow({ message, activeContact, onOpenThread }) {
                 typeof part === 'string' ? part : <span key={i} className="mention">{part.name}</span>
               )
             : message.text}
+          {message.widget && <McpWidget widget={message.widget} />}
           {message.link && <LinkCard link={message.link} />}
           {message.cards && (
             <div className="message-cards">

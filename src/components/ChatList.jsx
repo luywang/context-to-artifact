@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { favorites, projectNorthwind, chatList, contacts, teams } from '../data'
 import { copilotLogo } from '../shared/assets'
-import { Avatar, ChevronDown, Dots, Search } from './common'
+import { Avatar, ChevronDown, DemoArrow, Dots, Search } from './common'
 import './ChatList.css'
 
 // Small rounded-square team icon used in the Teams & channels section. Mirrors
@@ -50,9 +50,22 @@ function SectionHeader({ label, collapsed, onToggle }) {
   )
 }
 
-export default function ChatList({ activeChatId, onSelectChat, readChatIds }) {
-  const isUnread = (bold, contactId) => bold && !readChatIds?.has(contactId)
+export default function ChatList({ activeChatId, onSelectChat, readChatIds, hintChatId, incomingChatIds }) {
+  const isUnread = (bold, contactId) => (bold || incomingChatIds?.has(contactId)) && !readChatIds?.has(contactId)
   const [collapsed, setCollapsed] = useState(() => new Set())
+  const [hintCursor, setHintCursor] = useState(hintChatId)
+  if (hintCursor !== hintChatId) {
+    setHintCursor(hintChatId)
+    if (hintChatId) {
+      setCollapsed(prev => {
+        const next = new Set(prev)
+        for (const [key, chats] of [['favorites', favorites], ['northwind', projectNorthwind], ['chats', chatList]]) {
+          if (chats.some(chat => chat.contactId === hintChatId)) next.delete(key)
+        }
+        return next
+      })
+    }
+  }
   const isCollapsed = (key) => collapsed.has(key)
   const toggleSection = (key) => setCollapsed((prev) => {
     const next = new Set(prev)
@@ -68,11 +81,13 @@ export default function ChatList({ activeChatId, onSelectChat, readChatIds }) {
       <div
         key={contact.id}
         className={`chat-list-item ${contact.id === activeChatId ? 'selected' : ''}`}
+        data-chat-id={contact.id}
         onClick={() => onSelectChat(contact.id)}
       >
         <Avatar contact={contact} size={20} />
         <span className={`chat-item-name ${unread ? 'chat-item-bold' : ''}`}>{contact.name}</span>
         {unread && <span className="unread-dot" />}
+        {hintChatId === contact.id && <span className="chat-demo-hint"><DemoArrow direction="left" /></span>}
       </div>
     )
   }

@@ -59,7 +59,7 @@ Single-page React 19 app built with Vite 8. No routing, no state management libr
 └─────────┴──────────┴──────────────────────────────────────────────────┘
 ```
 
-`NavRail` is a controlled component driving `activeView` (`'chat' | 'activity'`). When `activity` is active, `ChatList` is swapped for `ActivityList` and `ChatView` renders the chat the selected activity event points at (with that event's source message highlighted).
+`NavRail` is a controlled component driving `activeView` (`'chat' | 'activity' | 'copilot'`). When `activity` is active, `ChatList` is swapped for `ActivityList` and `ChatView` renders the chat the selected activity event points at (with that event's source message highlighted). When `copilot` is active, `CopilotView` fills the workspace; the chat workspace stays mounted but hidden to preserve drafts and rail state.
 
 `ChatView` can render up to two right-hand rails alongside the main canvas:
 - **SessionsRail** — list of past agent sessions for the active agent chat (agent chats only)
@@ -70,11 +70,13 @@ Single-page React 19 app built with Vite 8. No routing, no state management libr
 
 Hoisted so rails and the canvas stay in sync:
 
-- `activeView` — `'chat' | 'activity'`, driven by NavRail
+- `activeView` — `'chat' | 'activity' | 'copilot'`, driven by NavRail. Copilot replaces the workspace while preserving the Teams frame and mounted chat state.
 - `activeChatId` — which chat is open
 - `readChatIds` (`Set`) — chats the user has visited; dismisses `bold` + unread-dot in `ChatList`
 - `sessions` — per-agent list of past sessions (starts from `data/sessions.js`, augmented at runtime)
 - `dynamicSessionMessages` — messages for sessions created during the prototype session
+- `extraMessages` — per-chat/session runtime messages shared by ChatView and the Copilot sharing flow; hoisted so incoming Copilot results preserve message order
+- `pendingSharedMessage` — destination chat and message id for the guided Dynamics-to-Teams handoff
 - `activityEvents` / `activeActivityId` — notification feed state backing the Activity view
 - `navIntent` — one-shot signal used when cross-navigating between chats. Shape: `{ chatId, sessionId?, channelThreadPostId?, highlightMessageId? }`. ChatView consumes it on the next render to open the sessions rail, auto-open a channel thread, or scroll + flash a specific message
 
@@ -92,6 +94,8 @@ All mocks live in `src/data/` and are re-exported by `src/data.js` (the barrel).
 - `sessionMessages.js` — message history keyed by session id
 - `promptSuggestions.js` — the 2×3 grid of prompt cards shown in the empty state for a new agent session, keyed by agent contact id
 - `activityEvents.js` — `activityEvents`, the chronological notification feed (reactions, replies, mentions) referenced by contact/message/post ids
+- `copilot.js` — Copilot prompt suggestions, pinned agents, and sample conversations for the embedded Microsoft 365-style workspace
+- `dynamicsDemo.js` — prefilled Dynamics prompt and mocked MCP HTML widget; the same payload is rendered in Copilot and shared to Northwind Core
 
 ### Contact types
 
@@ -111,6 +115,8 @@ Channels are additionally grouped into teams via the `teams` export. Each team h
 - `src/components/common/` — shared primitives meant for reuse across surfaces. See the **Available Components** catalog below for the full list. Add a new reusable primitive here; don't inline SVGs or hand-roll a button when a common one fits.
 - `src/components/` — feature components for the current surface:
   - `TitleBar`, `NavRail`, `ChatList` — chrome
+  - `CopilotView` — full-app Copilot workspace with its own sidebar, grounding control, composer, and local conversation state; kept mounted when switching Teams surfaces
+  - `ShareToTeamsModal` — searchable single-group picker opened by Copilot's Share action; posts only after Send, with native dialog focus management and Escape dismissal
   - `ActivityList` — left pane when the bell icon is selected; chronological feed of reactions/replies/mentions that target the current user. Clicking an event routes `ChatView` to the source chat (and opens a channel thread or flashes an anchor message when relevant)
   - `ChatView` — the main canvas router; delegates to `ChatHeader`, `Compose`, and the rails
   - `ChatHeader`, `Compose` — split out from `ChatView` to keep it focused on state + routing
@@ -139,7 +145,8 @@ A component appearing here doesn't mean it's actively used in the default repo �
 | `DemoArrow` | Red pulsing arrow that cues the viewer to the next click target during a prototype walkthrough. **Whenever a task says "red arrow" / "demo arrow" / "hint arrow" to guide the viewer, it means this.** | `direction: 'left' \| 'right' \| 'up' \| 'down'`, `size = 24`, `className?` | Owns only the visual + pulse animation (uses the `translate` CSS property so caller `transform` doesn't collide). Caller handles absolute positioning near the target and should set `pointer-events: none` on the wrapper so clicks still land on the target. **Ephemeral**: track show/hide state wherever the target's click handler lives and unmount once the target is clicked. See `DESIGN_GUIDE.md` → "Demo Hint Arrows". |
 | `FreModal` | First-run-experience modal. Modern welcome layout: gradient hero band with a floating icon badge, centered title + subtitle, scrollable body, fixed footer with a single primary dismiss button. Click on the overlay or pressing Escape also dismisses. | `title`, `subtitle?`, `children` (body), `onDismiss`, `dismissLabel = 'Got it'` | App.jsx currently shows it on every load (per-session dismiss only). To gate it as a true first-run, persist the dismissed state to `localStorage` in `dismissFre` and read it in the `showFre` initializer. CSS exposes `.fre-feature-list` / `.fre-feature` / `.fre-feature-check` / `.fre-feature-text` / `.fre-feature-title` / `.fre-feature-desc` helper classes for checkmark feature lists, and `.fre-modal-footnote` for a small footnote line below the body. |
 | `ChainOfThought` | Post-reasoning trace shown at the bottom of an agent's result message — the Teams/Claude/ChatGPT "Show steps" pattern. Collapsed: gray check-circle icon + label + right chevron. Expanded: list of completed steps, each with a check-circle. Box uses a thin outline and transparent background so it adopts the surrounding bubble color. | `steps: string[] \| { text: string }[]`, `label = 'Completed steps'` | Attach to a message via `message.chainOfThought` — `MessageRow` renders the component at the very bottom of the bubble (after cards). Use only on the **final completion message of a task** (skip intermediate confirmations, "running…" messages, simple recall, or clarifications). Reusable across agents — currently only attached to Cowork's result messages but the data field is generic. |
-| `Icon` library | Shared SVG icons exported from `components/common/Icon.jsx`: `Close`, `Plus`, `ChevronDown`, `ChevronLeft`, `ChevronRight`, `Send`, `Clock`, `Search`, `Dots`, `EmojiAdd`, `Edit`, `Check`, `CheckCircle`, `Info`, `ChatMultiple`, `Lock`. | Each takes `size`; stroked icons (`Clock`, `EmojiAdd`, `Edit`, `Check`, `CheckCircle`, `Info`, `ChatMultiple`) also take `stroke`. | When adding a new icon, start at [fluenticons.co](https://fluenticons.co/) (Fluent UI — matches Teams). Add it here instead of inlining SVG in a feature component. |
+| `McpWidget` | Tool-returned HTML widget, shared unchanged across Copilot and Teams. | `widget: { title, html, mimeType }` | Scriptless sandboxed iframe with no-referrer policy. Attach via `message.widget`; widget HTML must be self-contained. The Dynamics demo is an intentional HTML exception to the Adaptive Card convention. |
+| `Icon` library | Shared SVG icons exported from `components/common/Icon.jsx`: `Close`, `Plus`, `ChevronDown`, `ChevronLeft`, `ChevronRight`, `Send`, `Clock`, `Search`, `Dots`, `EmojiAdd`, `Edit`, `Check`, `CheckCircle`, `Info`, `ChatMultiple`, `Lock`, `PanelLeft`, `Share`. | Each takes `size`; stroked icons (`Clock`, `EmojiAdd`, `Edit`, `Check`, `CheckCircle`, `Info`, `ChatMultiple`) also take `stroke`. | When adding a new icon, start at [fluenticons.co](https://fluenticons.co/) (Fluent UI — matches Teams). Add it here instead of inlining SVG in a feature component. |
 
 ## Key Conventions
 

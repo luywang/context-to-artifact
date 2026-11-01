@@ -77,6 +77,13 @@
   height: 24px;
 }
 
+.nav-copilot-icon {
+  width: 24px;
+  height: 24px;
+  background: currentColor;
+  mask: var(--copilot-icon) center / contain no-repeat;
+}
+
 .nav-badge {
   position: absolute;
   top: -4px;

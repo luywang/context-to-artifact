@@ -16,6 +16,7 @@ This persona is fictional. Don't tie messages to any real person, employer, or i
 - **Northwind Traders** — lead engagement, multi-quarter. Helping Northwind stand up an internal agent platform (their codename: "Agents Platform v2") so their ops and partner teams can delegate work to AI agents. Currently in launch-planning for an April 25 milestone.
 - **Conversational AI working group** — smaller recurring advisory engagement with a separate client, focused on how their agents should handle handoffs, context preservation, and slash-command invocations.
 - Secondary advisory work comes and goes; keep it vague in messages unless specifically seeded.
+- **Dynamics opportunity demo** — Alex reviews Northwind's sample sales pipeline in Copilot and shares the complete Dynamics MCP widget with the **Northwind Core** group. Potential customers are fictional: Contoso Retail, Fabrikam Logistics, Adventure Works, and Tailspin Toys. Keep opportunity topics tied to partner onboarding, agent rollout, and support handoffs.
 
 ## Close collaborators
 

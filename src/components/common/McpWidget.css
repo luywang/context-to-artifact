@@ -16,14 +16,26 @@
   border: none;
 }
 
+.mcp-widget-ownership iframe {
+  height: 500px;
+}
+
 @container (max-width: 480px) {
   .mcp-widget iframe {
     height: 520px;
+  }
+
+  .mcp-widget-ownership iframe {
+    height: 640px;
   }
 }
 
 @container (max-width: 320px) {
   .mcp-widget iframe {
     height: 620px;
+  }
+
+  .mcp-widget-ownership iframe {
+    height: 780px;
   }
 }

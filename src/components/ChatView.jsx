@@ -14,6 +14,7 @@ import {
   breakthuAgent,
 } from '../data'
 import { TypingIndicator } from './common'
+import useOpportunityOwnershipDemo from './useOpportunityOwnershipDemo'
 import MessageRow from './MessageRow'
 import SessionsRail from './SessionsRail'
 import AgentsRail from './AgentsRail'
@@ -121,6 +122,8 @@ export default function ChatView({
   const [threadRailOpen, setThreadRailOpen] = useState(false)
   const [highlightMessageId, setHighlightMessageId] = useState(null)
   const messagesEndRef = useRef(null)
+  const ownershipDemo = useOpportunityOwnershipDemo({ activeChatId, extraMessages, setExtraMessages })
+  const [ownershipDraftCursor, setOwnershipDraftCursor] = useState({ chatId: null, prompt: null })
 
   // Reset per-chat ephemeral state when activeChatId changes. Using the
   // render-phase state-adjustment pattern (rather than useEffect) avoids the
@@ -173,6 +176,14 @@ export default function ChatView({
     }
   }
 
+  if (ownershipDraftCursor.chatId !== activeChatId || ownershipDraftCursor.prompt !== ownershipDemo.prompt) {
+    setOwnershipDraftCursor({ chatId: activeChatId, prompt: ownershipDemo.prompt })
+    if (ownershipDemo.prompt && (chatIdCursor !== activeChatId || !inputValue || inputValue === ownershipDraftCursor.prompt)) {
+      setInputValue(ownershipDemo.prompt)
+      setComposeMention(null)
+    }
+  }
+
   useEffect(() => {
     if (navIntent?.chatId === activeChatId) clearNavIntent()
   }, [navIntent, activeChatId, clearNavIntent])
@@ -191,7 +202,10 @@ export default function ChatView({
           el.classList.remove('message-row-highlight')
           setHighlightMessageId(null)
         }, 1800)
-        return () => clearTimeout(t)
+        return () => {
+          clearTimeout(t)
+          el.classList.remove('message-row-highlight')
+        }
       }
       return
     }
@@ -222,6 +236,7 @@ export default function ChatView({
   // session's messages. Non-session chats fall back to the chat id.
   const canvasKey = activeSessionId || activeChatId
   const messages = [...displayBaseMessages, ...(extraMessages[canvasKey] || [])]
+    .filter(message => !message.targetedTo || message.targetedTo === 'me')
   // Messages with `replies` arrays power the threads list/detail view in
   // group chats. Channels use channelPosts for the same purpose.
   const groupThreadablePosts = isGroup ? messages.filter((m) => m.replies?.length > 0) : []
@@ -460,6 +475,9 @@ export default function ChatView({
     setInputValue('')
     setComposeMention(null)
 
+    setHighlightMessageId(null)
+    if (ownershipDemo.handleSend(sentText)) return
+
     const isJiraInvocation = JIRA_FLOW_ENABLED && chatId === 11 && sentText.toLowerCase().includes('jira')
     if (isJiraInvocation) {
       startJiraDemoFlow(sentText)
@@ -603,6 +621,8 @@ export default function ChatView({
                     key={msg.id}
                     message={isThreaded ? postToMessage(msg) : msg}
                     activeContact={activeContact}
+                    onCardAction={ownershipDemo.handleAction}
+                    onCardChoice={ownershipDemo.changeCandidate}
                     onOpenThread={isThreaded ? () => {
                       if (threadRailOpen && channelThreadPostId === msg.id) {
                         setThreadRailOpen(false)
@@ -621,6 +641,9 @@ export default function ChatView({
         </div>
 
         <div className="chat-compose-area">
+          {ownershipDemo.hint && (
+            <div className="ownership-demo-guide" role="status">{ownershipDemo.hint}</div>
+          )}
           {mainTypingAgentId === activeChatId && (
             <TypingIndicator
               contact={activeContact}
@@ -634,6 +657,7 @@ export default function ChatView({
             onClearMention={() => setComposeMention(null)}
             onSend={handleSend}
             isChannel={isChannel}
+            showSendHint={!!ownershipDemo.prompt && inputValue === ownershipDemo.prompt}
           />
         </div>
       </div>

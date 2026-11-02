@@ -9,4 +9,4 @@ export { copilotAgent, designerAgent, pollyAgent, breakthuAgent } from './data/a
 export { promptSuggestions } from './data/promptSuggestions'
 export { activityEvents } from './data/activityEvents'
 export { copilotPrompts, copilotAgents, copilotConversations, copilotReferences } from './data/copilot'
-export { dynamicsDemo } from './data/dynamicsDemo'
+export { dynamicsDemo, createDynamicsWidget, opportunityOwnershipDemo } from './data/dynamicsDemo'

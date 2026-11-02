@@ -44,9 +44,11 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
   const [referencesOpen, setReferencesOpen] = useState(false)
   const inputRef = useRef(null)
   const messagesEndRef = useRef(null)
+  const connectionTimers = useRef(new Set())
   const activeConversation = conversations.find(chat => chat.id === activeId)
   const agent = copilotAgents.find(item => item.id === agentId)
   const messages = activeConversation?.messages || []
+  const isConnecting = messages.some(message => message.isConnecting)
   const filteredConversations = conversations.filter(chat =>
     `${chat.title} ${chat.messages.map(message => message.text).join(' ')}`.toLowerCase().includes(query.toLowerCase())
   )
@@ -56,7 +58,12 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
       messagesEndRef.current?.scrollIntoView({ block: 'end' })
       inputRef.current?.focus()
     }
-  }, [hidden, activeId, messages.length])
+  }, [hidden, activeId, messages.length, isConnecting])
+
+  useEffect(() => {
+    const timers = connectionTimers.current
+    return () => timers.forEach(timer => clearTimeout(timer))
+  }, [])
 
   function newChat(nextAgentId = null) {
     setActiveId(null)
@@ -85,29 +92,48 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
   function sendMessage(event) {
     event.preventDefault()
     const text = input.trim()
-    if (!text) return
+    if (!text || isConnecting) return
     const reply = { ...sampleReply(text, mode, agent), id: crypto.randomUUID() }
+    const conversationId = activeId || `copilot-${crypto.randomUUID()}`
     const nextMessages = [
       ...messages,
       { role: 'user', text },
-      reply,
+      reply.widget ? {
+        role: 'assistant',
+        id: reply.id,
+        text: 'Connecting to Dynamics MCP...',
+        isConnecting: true,
+      } : reply,
     ]
-    setDemoStep(reply.widget ? { stage: 'share', messageId: reply.id } : null)
+    setDemoStep(reply.widget ? { stage: 'connecting', messageId: reply.id } : null)
     if (activeId) {
       setConversations(prev => prev.map(chat => chat.id === activeId
         ? { ...chat, messages: nextMessages, mode }
         : chat
       ))
     } else {
-      const id = `copilot-${crypto.randomUUID()}`
       setConversations(prev => [{
-        id,
+        id: conversationId,
         title: text.length > 54 ? `${text.slice(0, 54)}...` : text,
         agentId,
         mode,
         messages: nextMessages,
       }, ...prev])
-      setActiveId(id)
+      setActiveId(conversationId)
+    }
+    if (reply.widget) {
+      const timer = setTimeout(() => {
+        connectionTimers.current.delete(timer)
+        setConversations(prev => prev.map(chat => chat.id === conversationId
+          ? { ...chat, messages: chat.messages.map(message => message.id === reply.id ? reply : message) }
+          : chat
+        ))
+        setDemoStep(prev => prev?.stage === 'connecting' && prev.messageId === reply.id
+          ? { stage: 'share', messageId: reply.id }
+          : prev
+        )
+      }, 2000)
+      connectionTimers.current.add(timer)
     }
     setInput('')
     setReferencesOpen(false)
@@ -181,7 +207,7 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
           {demoStep?.stage === 'send' && mode === 'Work' && !agent && /dynamics|opportunit/i.test(input) && (
             <span className="copilot-send-hint"><DemoArrow direction="right" /></span>
           )}
-          <IconButton label="Send message" className="copilot-send" type="submit" disabled={!input.trim()}>
+          <IconButton label="Send message" className="copilot-send" type="submit" disabled={!input.trim() || isConnecting}>
             <Send size={20} />
           </IconButton>
         </div>
@@ -270,7 +296,7 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
         <div className={`copilot-content${messages.length ? ' has-conversation' : ''}`}>
           {messages.length ? (
             <>
-              <div className="copilot-messages" role="log" aria-label="Copilot conversation" aria-live="polite">
+              <div className="copilot-messages" role="log" aria-label="Copilot conversation" aria-live="polite" aria-busy={isConnecting}>
                 <h1>{activeConversation.title}</h1>
                 {messages.map((message, index) => {
                   const shared = sharedMessages[message.id]
@@ -283,7 +309,7 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
                         <span>{agent?.name || 'Copilot'}</span>
                       </div>
                     )}
-                    <p>{message.text}</p>
+                    <p role={message.isConnecting ? 'status' : undefined}>{message.text}</p>
                     {message.widget && <McpWidget widget={message.widget} />}
                     {message.sources?.length > 0 && (
                       <div className="copilot-sources" aria-label="Sample references">

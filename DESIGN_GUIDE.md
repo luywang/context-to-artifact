@@ -127,13 +127,21 @@ Copilot follows the Microsoft 365 Copilot chat layout embedded below the Teams t
 
 ### Dynamics MCP sharing demo
 
-- Launch in Copilot with Alex's Dynamics opportunity prompt prefilled. Guide Send, Share, and Open group chat with ephemeral `DemoArrow` hints.
+- Launch in Copilot with **Show me the top revenue opportunities in Dynamics** prefilled. After Send, show **Connecting to Dynamics MCP...** for **2 seconds**, then replace the status with the opportunity result and enable Share. Guide Send, Share, and Open group chat with ephemeral `DemoArrow` hints. This connection step is simulated, not a live MCP call.
 - The Dynamics MCP result is a **self-contained HTML widget**, not an Adaptive Card or screenshot. This scenario intentionally preserves the tool-returned HTML; render it with the shared `McpWidget` in both Copilot and Teams.
 - Widget anatomy: Dynamics 365 Sales heading, Dynamics MCP badge, potential-customer / topic / estimated-revenue table, USD total, and sample-data footer. Use existing neutral surfaces, dividers, typography, and Teams purple.
 - Isolate HTML in a scriptless, sandboxed iframe. Share the original message text and unchanged widget HTML, never rebuild a different Teams summary.
-- Share is a secondary action beneath the answer. It opens a Teams-style modal with group-chat search, single selection, Cancel, and Send. Preselect **Northwind Core** on every opening so Send is immediately enabled and guided, while allowing users to search and choose another group. Opening or cancelling the modal must not post a message.
+- Share is a secondary action beneath the answer. It opens a Teams-style modal with group-chat search, single selection, Cancel, and Send. Preselect **Northwind Sales** on every opening so Send is immediately enabled and guided, while allowing users to search and choose another group. Opening or cancelling the modal must not post a message.
 - Send posts the unchanged payload to the selected group. Confirm the actual destination without navigating automatically; the viewer clicks Open group chat or the guided group row. The modal traps focus, supports Escape dismissal, and guides its Send action after selection.
 - Teams displays the shared message as an incoming **Copilot** agent message. Mark the group unread on share, highlight the shared message on opening, and remove hints after their targets are clicked.
+
+### Opportunity ownership walkthrough
+
+- After sharing, prefill Alex's next message and guide Send with `DemoArrow`: mention Everyone, collect three check-ins, ask Copilot to add confirmed owners, then request a recommendation for the uncovered Tailspin Toys opportunity.
+- Ownership widgets retain the original customers, topics, revenues, and total, adding a **Confirmed owner** column. Explicitly label the uncovered opportunity **Unassigned / No active engagement**. Keep the original shared widget unchanged; publish new widgets as ownership is confirmed.
+- Recommendations and final accepted ownership are public. Approval cards and acknowledgements are **targeted to Alex**, with a lock disclaimer, thin neutral border, `#FAFAFA` fill, and no implication that the group sees them.
+- Use an Adaptive Card with proposed owner, prior engagement, and **Confirm assignment**, **Suggest a different person**, and **Cancel**. Confirm is a purple primary button; other actions are neutral. **Suggest a different person** reveals an accessible owner dropdown in place within the same card, without sending another message or card. Keep Confirm and Cancel enabled while choosing. Disable settled actions and remove their hint arrows.
+- Confirm first acknowledges the privately notified person to Alex. After **2 seconds**, simulate their private acceptance and publish a new group-visible widget with all four confirmed owners. Cancel sends no notification or public assignment. The demo must hide other recipients' targeted messages from Alex, and timers must keep updating the originating group after navigation.
 
 ## Message Patterns
 
@@ -225,6 +233,7 @@ In the prototype's message model, adaptive cards attach to a message via `messag
 ```
 
 Schema rules:
+- **Interactive actions** may be objects `{ id, label, primary? }` instead of legacy string labels. `MessageRow` dispatches `onCardAction(message, id)`; `actionsDisabled` settles all actions. Optional `choice: { label, value, options: [{ value, label }] }` dispatches `onCardChoice(message, value)`.
 - **Office-app icon tiles** (`iconType: 'word' | 'excel' | 'powerpoint' | 'outlook' | 'teams'`) render a 32px rounded-square tile with the brand color and capital letter — use them for **artifact cards** so generated deliverables read as M365 outputs at a glance. Pair with `accentColor` matching the brand color (`#2B579A` Word, `#217346` Excel, `#B7472A` PowerPoint, `#0078D4` Outlook, `#5B5FC7` Teams).
 - **Plan cards** should use `iconType: 'teams'`, `badge: { text: 'Awaiting approval', tone: 'amber' }`, and `steps` with all `status: 'pending'`. Use `actions: ['Approve & run', 'Edit plan']` (or similar) so the plan reads as a checkpoint.
 - **Artifact cards** (a deliverable Cowork produced) should use the matching Office `iconType`, a `subtitle` describing what the artifact is, optionally a `badge: { text: 'Ready', tone: 'green' }`, and a `footer: 'Generated by Cowork · <time>'`.

@@ -1,4 +1,4 @@
-import { IconButton, Send } from './common'
+import { DemoArrow, IconButton, Send } from './common'
 import { copilotLogo } from '../shared/assets'
 import './Compose.css'
 
@@ -17,6 +17,7 @@ export default function Compose({
   onClearMention,
   onSend,
   isChannel,
+  showSendHint = false,
 }) {
   const handleKeyDown = (e) => {
     if (e.key === 'Backspace' && value === '' && mention) {
@@ -78,9 +79,12 @@ export default function Compose({
               </svg>
             </button>
             <div className="compose-divider" />
-            <IconButton label="Send" className="send-btn" onClick={onSend}>
-              <Send />
-            </IconButton>
+            <div className="compose-guided-send">
+              {showSendHint && <span className="compose-guided-send-hint"><DemoArrow direction="down" /></span>}
+              <IconButton label="Send" className="send-btn" onClick={onSend}>
+                <Send />
+              </IconButton>
+            </div>
           </div>
         </div>
       </div>

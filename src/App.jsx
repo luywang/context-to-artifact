@@ -170,11 +170,14 @@ export default function App() {
           dismissLabel="Start demo"
         >
           <h3 className="fre-section-title">1. Send</h3>
-          <p>Alex's Dynamics prompt is ready. Click Send to see potential customers, topics, and estimated revenue in an HTML widget returned by the Dynamics MCP demo.</p>
+          <p>Alex's top-revenue opportunities prompt is ready. Click Send to see Connecting to Dynamics MCP... for two seconds, followed by potential customers, topics, and estimated revenue in the Dynamics MCP demo widget.</p>
           <h3 className="fre-section-title">2. Share</h3>
           <p>Click Share beneath Copilot's answer, search for a Teams group chat, select it, then click Send to post the complete message and widget.</p>
           <h3 className="fre-section-title">3. Open the group chat</h3>
           <p>Follow the red arrow to your selected group chat. The same result appears in Teams, sent by the Copilot agent.</p>
+          <h3 className="fre-section-title">4. Confirm ownership</h3>
+          <p>Send the prepared group messages to collect current owners, update the widget, and ask Copilot who should cover Tailspin Toys. Review the targeted approval card, then confirm, choose someone else, or cancel.</p>
+          <p>After confirmation, Copilot privately notifies the proposed owner. Two seconds later, their simulated acceptance appears as a public update with the final ownership widget.</p>
           <p className="fre-modal-footnote">Interactive prototype with fictional customer data. No live Dynamics or MCP connection.</p>
         </FreModal>
       )}

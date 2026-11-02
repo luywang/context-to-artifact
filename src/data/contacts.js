@@ -34,7 +34,7 @@ export const contacts = [
   { id: 18, name: 'Data Warehouse Support', initials: 'DW', color: '#498205', status: null, isGroup: true },
   { id: 19, name: 'Targeted Messages', initials: 'TM', color: '#DA3B01', status: null, isGroup: true },
   { id: 20, name: 'ACF', initials: 'AC', color: '#005B70', status: null, isGroup: true },
-  { id: 21, name: 'Northwind Core', initials: 'NC', color: '#0078D4', status: null, isGroup: true, memberCount: 9 },
+  { id: 21, name: 'Northwind Sales', initials: 'NS', color: '#0078D4', status: null, isGroup: true, memberCount: 9 },
   { id: 22, name: 'Design crit', initials: 'DC', color: '#8764B8', status: null, isGroup: true, memberCount: 6 },
   { id: 23, name: 'Northwind launch', initials: 'NL', color: '#CA5010', status: null, isGroup: true, memberCount: 7 },
   { id: 24, name: 'Dogfood feedback', initials: 'DF', color: '#498205', status: null, isGroup: true, memberCount: 11 },

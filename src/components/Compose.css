@@ -102,6 +102,18 @@
   color: #6264A7;
 }
 
+.compose-guided-send {
+  position: relative;
+}
+
+.compose-guided-send-hint {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 /* ── Jira demo flow hint arrows ──
    Kept in CSS for the disabled scripted demo flow in ChatView (JIRA_FLOW_ENABLED).
    Restore the JSX in Compose.jsx if you need them. */

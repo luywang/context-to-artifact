@@ -178,6 +178,8 @@ export default function App() {
           <h3 className="fre-section-title">4. Confirm ownership</h3>
           <p>Send the prepared group messages to collect current owners, update the widget, and ask Copilot who should cover Tailspin Toys. Review the targeted approval card, then confirm, choose someone else, or cancel.</p>
           <p>After confirmation, Copilot privately notifies the proposed owner. Two seconds later, their simulated acceptance appears as a public update with the final ownership widget.</p>
+          <h3 className="fre-section-title">5. Project revenue</h3>
+          <p>Ask the confirmed owners for close ETAs, approve Copilot's public offer to update the widget, then request a revenue projection. The group reacts to the chart with Like and Love.</p>
           <p className="fre-modal-footnote">Interactive prototype with fictional customer data. No live Dynamics or MCP connection.</p>
         </FreModal>
       )}

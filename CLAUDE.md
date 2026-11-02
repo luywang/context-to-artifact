@@ -41,7 +41,7 @@ npm run lint     # ESLint
 npm run preview  # Serve the production build locally
 ```
 
-No test runner is configured.
+No application test runner is configured. Focused Dynamics data tests use Node's built-in runner: `node --test src/data/dynamicsDemo.test.js`.
 
 ## Architecture
 
@@ -95,7 +95,7 @@ All mocks live in `src/data/` and are re-exported by `src/data.js` (the barrel).
 - `promptSuggestions.js` — the 2×3 grid of prompt cards shown in the empty state for a new agent session, keyed by agent contact id
 - `activityEvents.js` — `activityEvents`, the chronological notification feed (reactions, replies, mentions) referenced by contact/message/post ids
 - `copilot.js` — Copilot prompt suggestions, pinned agents, and sample conversations for the embedded Microsoft 365-style workspace
-- `dynamicsDemo.js` — prefilled Dynamics prompt, mocked MCP HTML widget, owner-aware widget generator, and scripted ownership scenario; the original payload is shared unchanged to the selected group
+- `dynamicsDemo.js` — prefilled Dynamics prompt, mocked MCP HTML widget, owner/ETA-aware widget generator, chronological cumulative-revenue card, and scripted ownership/forecast scenario; the original payload is shared unchanged to the selected group
 
 ### Contact types
 
@@ -119,7 +119,7 @@ Channels are additionally grouped into teams via the `teams` export. Each team h
   - `ShareToTeamsModal` — searchable single-group picker opened by Copilot's Share action; posts only after Send, with native dialog focus management and Escape dismissal
   - `ActivityList` — left pane when the bell icon is selected; chronological feed of reactions/replies/mentions that target the current user. Clicking an event routes `ChatView` to the source chat (and opens a channel thread or flashes an anchor message when relevant)
   - `ChatView` — the main canvas router; delegates to `ChatHeader`, `Compose`, and the rails
-  - `useOpportunityOwnershipDemo` — guided group ownership flow keyed by the shared Dynamics message; runtime messages persist in `extraMessages`. Schedules mock check-ins and a two-second post-approval acceptance in the originating group. `targetedTo: 'me'` is visible only to Alex; other targeted recipients are filtered out of the canvas.
+  - `useOpportunityOwnershipDemo` — guided group ownership/forecast flow keyed by the shared Dynamics message; runtime messages persist in `extraMessages`. Schedules mock check-ins, two-second post-approval acceptance, close ETA replies, public widget approval, and projection reactions in the originating group. `targetedTo: 'me'` is visible only to Alex; other targeted recipients are filtered out of the canvas.
   - `ChatHeader`, `Compose` — split out from `ChatView` to keep it focused on state + routing
   - `MessageRow` — one message bubble (reactions, thread reply badge, link cards, Adaptive Cards). Supports object card actions and optional owner choices through `onCardAction` / `onCardChoice`, preserving legacy string actions.
   - `MessageActions` — hover toolbar above a message (quick reactions, emoji picker, edit, more)

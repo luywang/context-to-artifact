@@ -74,13 +74,6 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
     inputRef.current?.focus()
   }
 
-  function startDynamicsDemo() {
-    newChat()
-    setMode('Work')
-    setInput(dynamicsDemo.prompt)
-    setDemoStep({ stage: 'send' })
-  }
-
   function selectConversation(chat) {
     setActiveId(chat.id)
     setAgentId(chat.agentId)
@@ -376,12 +369,6 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
               <p className="copilot-greeting">{agent ? agent.name : `Hi, ${currentUser.name.split(' ')[0]}`}</p>
               <h1>{agent ? 'What would you like to explore?' : 'How can I help you today?'}</h1>
               <p className="copilot-welcome-description">{agent?.description || 'Bring your work together with Copilot.'}</p>
-              {!agent && (
-                <div className="copilot-demo-banner">
-                  <div><strong>Dynamics to Teams</strong><span>Send the prompt, share the widget, then open your chosen group chat.</span></div>
-                  <button type="button" onClick={startDynamicsDemo}>Try Dynamics demo</button>
-                </div>
-              )}
               {composer}
               {mode === 'Work' && <div className="copilot-suggestions" aria-label="Suggested prompts">
                 {copilotPrompts.map(prompt => (

@@ -469,36 +469,6 @@
   text-align: center;
 }
 
-.copilot-demo-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  border: 1px solid #E8E8E8;
-  border-radius: 8px;
-  background: #FAFAFA;
-}
-
-.copilot-demo-banner strong,
-.copilot-demo-banner span {
-  display: block;
-}
-
-.copilot-demo-banner strong {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.copilot-demo-banner span {
-  margin-top: 4px;
-  font-size: 12px;
-  color: #616161;
-}
-
-.copilot-demo-banner button,
 .copilot-open-chat {
   display: inline-flex;
   align-items: center;
@@ -508,11 +478,6 @@
   background: transparent;
   color: #5B5FC7;
   cursor: pointer;
-}
-
-.copilot-demo-banner button {
-  flex-shrink: 0;
-  font-size: 12px;
 }
 
 .copilot-demo-action {
@@ -599,12 +564,6 @@
 }
 
 @media (max-width: 800px) {
-  .copilot-demo-banner {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-  }
-
   .copilot-sidebar {
     width: 190px;
   }

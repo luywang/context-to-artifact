@@ -128,6 +128,7 @@ Copilot follows the Microsoft 365 Copilot chat layout embedded below the Teams t
 ### Dynamics MCP sharing demo
 
 - Launch in Copilot with **Show me the top revenue opportunities in Dynamics** prefilled. After Send, show **Connecting to Dynamics MCP...** for **2 seconds**, then replace the status with the opportunity result and enable Share. Guide Send, Share, and Open group chat with ephemeral `DemoArrow` hints. This connection step is simulated, not a live MCP call.
+- Keep the opening Copilot scene free of a demo-note banner above the prompt composer; retain the prefilled prompt and Send hint.
 - The Dynamics MCP result is a **self-contained HTML widget**, not an Adaptive Card or screenshot. This scenario intentionally preserves the tool-returned HTML; render it with the shared `McpWidget` in both Copilot and Teams.
 - Widget anatomy: Dynamics 365 Sales heading, Dynamics MCP badge, potential-customer / topic / estimated-revenue table, USD total, and sample-data footer. Use existing neutral surfaces, dividers, typography, and Teams purple.
 - Isolate HTML in a scriptless, sandboxed iframe. Share the original message text and unchanged widget HTML, never rebuild a different Teams summary.
@@ -142,6 +143,13 @@ Copilot follows the Microsoft 365 Copilot chat layout embedded below the Teams t
 - Recommendations and final accepted ownership are public. Approval cards and acknowledgements are **targeted to Alex**, with a lock disclaimer, thin neutral border, `#FAFAFA` fill, and no implication that the group sees them.
 - Use an Adaptive Card with proposed owner, prior engagement, and **Confirm assignment**, **Suggest a different person**, and **Cancel**. Confirm is a purple primary button; other actions are neutral. **Suggest a different person** reveals an accessible owner dropdown in place within the same card, without sending another message or card. Keep Confirm and Cancel enabled while choosing. Disable settled actions and remove their hint arrows.
 - Confirm first acknowledges the privately notified person to Alex. After **2 seconds**, simulate their private acceptance and publish a new group-visible widget with all four confirmed owners. Cancel sends no notification or public assignment. The demo must hide other recipients' targeted messages from Alex, and timers must keep updating the originating group after navigation.
+
+### Close ETAs and revenue projection
+
+- After ownership is confirmed, guide Alex to ask the owners for close dates. Each opportunity gets a public owner reply. Use the actual chosen Tailspin owner, not always Emily.
+- Copilot proactively offers to add ETAs in a **public** Adaptive Card with **Yes, update widget**. Do not update the widget before approval. After Yes, publish a new HTML widget with close dates beneath each confirmed owner in the **Owner / close ETA** column; preserve the prior widgets and all opportunity values.
+- Alex then asks for revenue growth. Reuse the Adaptive Card bar-chart and metric patterns: chronological close dates, cumulative deal value in USD, clear incremental closes, and a $0 baseline for these opportunities only. Label the chart **Illustrative forecast** and explain that full estimated values closing on owner-provided dates are assumed, not guaranteed or accounting-recognized revenue. Do not invent percentage growth without an existing revenue baseline.
+- Script native Like/Love reaction pills gradually counting up under the chart for the nine group participants: pause 2 seconds after posting, then add one reaction every 1.2 seconds, reaching 5 Likes and 4 Loves after about 12 seconds. Preserve Alex's ability to add/remove reactions without double-counting a scripted reaction; participant names are available on hover.
 
 ## Message Patterns
 

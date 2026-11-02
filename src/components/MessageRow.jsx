@@ -120,22 +120,24 @@ function CardBars({ bars }) {
   )
 }
 
-// Combine seeded-in-data reactions with the current user's reactions into an
-// ordered list of pills. `byMe: true` → purple outline in the UI.
-function buildReactionList(baseReactions, myEmojis) {
+// Local choices override scripted reactions without counting the user twice.
+function buildReactionList(baseReactions, myChoices) {
   const map = new Map()
   for (const r of baseReactions || []) {
-    map.set(r.emoji, { emoji: r.emoji, count: r.count, byMe: false })
+    map.set(r.emoji, { ...r, byMe: !!r.byMe })
   }
-  for (const emoji of myEmojis) {
-    const existing = map.get(emoji)
-    if (existing) {
-      map.set(emoji, { ...existing, count: existing.count + 1, byMe: true })
-    } else {
-      map.set(emoji, { emoji, count: 1, byMe: true })
-    }
+  for (const [emoji, byMe] of myChoices) {
+    const existing = map.get(emoji) || { emoji, count: 0, byMe: false }
+    map.set(emoji, {
+      ...existing,
+      count: existing.count + Number(byMe) - Number(existing.byMe),
+      byMe,
+      participantIds: existing.participantIds
+        ? [...existing.participantIds.filter(id => id !== 'me'), ...(byMe ? ['me'] : [])]
+        : undefined,
+    })
   }
-  return [...map.values()]
+  return [...map.values()].filter(reaction => reaction.count > 0)
 }
 
 function ThreadReplyBadge({ reply, onClick }) {
@@ -178,20 +180,18 @@ export default function MessageRow({ message, activeContact, onOpenThread, onCar
       ? contacts.find(c => c.id === message.senderId)
       : activeContact
 
-  const [myReactions, setMyReactions] = useState(() => new Set())
+  const [myReactions, setMyReactions] = useState(() => new Map())
   const toggleReaction = (emoji) => {
     setMyReactions(prev => {
-      const next = new Set(prev)
-      if (next.has(emoji)) next.delete(emoji)
-      else next.add(emoji)
-      return next
+      const current = buildReactionList(message.reactions, prev).find(reaction => reaction.emoji === emoji)
+      return new Map(prev).set(emoji, !current?.byMe)
     })
   }
   const reactions = buildReactionList(message.reactions, myReactions)
 
   return (
     <div
-      className={`message-row ${isMe ? 'message-mine' : ''}${message.widget ? ' message-row-widget' : ''}${message.targetedTo === 'me' ? ' message-row-targeted' : ''}`}
+      className={`message-row ${isMe ? 'message-mine' : ''}${message.widget ? ' message-row-widget' : ''}${message.cards?.some(card => card.bars) ? ' message-row-chart' : ''}${message.targetedTo === 'me' ? ' message-row-targeted' : ''}`}
       data-message-id={message.id}
       data-targeted-to={message.targetedTo}
     >
@@ -227,7 +227,7 @@ export default function MessageRow({ message, activeContact, onOpenThread, onCar
               {message.cards.map((card, i) => card.type === 'file' ? (
                 <FileCard key={i} card={card} />
               ) : (
-                <div key={i} className="adaptive-card" style={{ borderLeftColor: card.accentColor }}>
+                <div key={i} className={`adaptive-card${card.actions?.some(action => typeof action === 'object') ? ' adaptive-card-interactive' : ''}`} style={{ borderLeftColor: card.accentColor }}>
                   {/* Header: optional icon + title/subtitle row + optional badge. */}
                   <div className="card-header">
                     {card.iconType && <CardIcon type={card.iconType} />}
@@ -322,6 +322,7 @@ export default function MessageRow({ message, activeContact, onOpenThread, onCar
                 className={`reaction-pill ${r.byMe ? 'reaction-pill-mine' : ''}`}
                 onClick={() => toggleReaction(r.emoji)}
                 aria-label={`${r.byMe ? 'Remove' : 'Add'} reaction ${r.emoji}`}
+                title={r.participantIds?.map(id => id === 'me' ? currentUser.name : contacts.find(contact => contact.id === id)?.name).filter(Boolean).join(', ')}
               >
                 <span aria-hidden="true">{r.emoji}</span>
                 {r.count > 1 && <span className="reaction-pill-count">{r.count}</span>}

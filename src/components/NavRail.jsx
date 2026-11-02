@@ -1,4 +1,5 @@
 import './NavRail.css'
+import { DemoArrow } from './common'
 
 const copilotIcon = (
   <span
@@ -92,7 +93,7 @@ const navItems = [
   },
 ]
 
-export default function NavRail({ activeView = 'chat', onSelectView, activityUnreadCount = 0 }) {
+export default function NavRail({ activeView = 'chat', onSelectView, activityUnreadCount = 0, hintCopilot = false }) {
   return (
     <nav className="nav-rail">
       <div className="nav-items">
@@ -119,6 +120,7 @@ export default function NavRail({ activeView = 'chat', onSelectView, activityUnr
                   <span className="nav-badge">{badgeCount > 99 ? '99+' : badgeCount}</span>
                 )}
               </div>
+              {item.id === 'copilot' && hintCopilot && <span className="nav-copilot-hint"><DemoArrow direction="left" /></span>}
             </button>
           )
         })}

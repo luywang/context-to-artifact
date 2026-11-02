@@ -1,25 +1,8 @@
 import { useState } from 'react'
 import { agentLogos } from '../shared/agentLogos'
 import { contacts, currentUser } from '../data'
-import { Avatar, LinkCard, PrivateDisclaimer, Check, ChainOfThought, DemoArrow, McpWidget } from './common'
+import { AdaptiveCard, Avatar, LinkCard, PrivateDisclaimer, ChainOfThought, McpWidget } from './common'
 import MessageActions from './MessageActions'
-
-// Office-app icon tiles for adaptive cards that represent generated artifacts.
-// Letter + brand color is enough at this scale; swap in real Fluent app glyphs
-// later if needed.
-const CARD_ICONS = {
-  word:       { letter: 'W', bg: '#2B579A' },
-  excel:      { letter: 'X', bg: '#217346' },
-  powerpoint: { letter: 'P', bg: '#B7472A' },
-  outlook:    { letter: 'O', bg: '#0078D4' },
-  teams:      { letter: 'T', bg: '#5B5FC7' },
-}
-
-function CardIcon({ type }) {
-  const cfg = CARD_ICONS[type]
-  if (!cfg) return null
-  return <div className="card-icon" style={{ background: cfg.bg }}>{cfg.letter}</div>
-}
 
 // File extensions per type, used to suffix the displayed filename so it
 // reads "Brief.docx" but the stored `name` stays clean.
@@ -47,75 +30,6 @@ function FileCard({ card }) {
         <div className="file-card-title">{card.name}{ext}</div>
         <div className="file-card-subtitle">{card.subtitle}</div>
       </div>
-    </div>
-  )
-}
-
-function CardBadge({ text, tone = 'neutral' }) {
-  return <span className={`card-badge card-badge-${tone}`}>{text}</span>
-}
-
-function CardSteps({ steps }) {
-  return (
-    <ol className="card-steps">
-      {steps.map((step, i) => (
-        <li key={i} className={`card-step card-step-${step.status || 'pending'}`}>
-          <span className="card-step-marker" aria-hidden="true">
-            {step.status === 'done' ? <Check size={11} /> : i + 1}
-          </span>
-          <span className="card-step-text">{step.text}</span>
-        </li>
-      ))}
-    </ol>
-  )
-}
-
-function CardFacts({ facts }) {
-  return (
-    <div className="card-facts">
-      {facts.map((fact, j) => (
-        <span key={j} className="card-fact">
-          <span className="card-fact-label">{fact.label}:</span> {fact.value}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-function CardMetrics({ metrics }) {
-  return (
-    <div className="card-metrics">
-      {metrics.map((m, j) => (
-        <div key={j} className="card-metric">
-          <div className="card-metric-value">{m.value}</div>
-          <div className="card-metric-label">{m.label}</div>
-          {m.delta && (
-            <div className={`card-metric-delta card-metric-delta-${m.deltaTone || 'neutral'}`}>
-              {m.delta}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function CardBars({ bars }) {
-  const max = bars.reduce((acc, b) => Math.max(acc, b.value), 0) || 1
-  return (
-    <div className="card-bars">
-      {bars.map((bar, j) => (
-        <div key={j} className="card-bar-row">
-          <div className="card-bar-label">{bar.label}</div>
-          <div className="card-bar-track">
-            <div
-              className="card-bar-fill"
-              style={{ width: `${(bar.value / max) * 100}%`, background: bar.color || undefined }}
-            />
-          </div>
-          <div className="card-bar-value">{bar.valueLabel || bar.value}</div>
-        </div>
-      ))}
     </div>
   )
 }
@@ -227,85 +141,7 @@ export default function MessageRow({ message, activeContact, onOpenThread, onCar
               {message.cards.map((card, i) => card.type === 'file' ? (
                 <FileCard key={i} card={card} />
               ) : (
-                <div key={i} className={`adaptive-card${card.actions?.some(action => typeof action === 'object') ? ' adaptive-card-interactive' : ''}`} style={{ borderLeftColor: card.accentColor }}>
-                  {/* Header: optional icon + title/subtitle row + optional badge. */}
-                  <div className="card-header">
-                    {card.iconType && <CardIcon type={card.iconType} />}
-                    <div className="card-header-text">
-                      <div className="card-title-row">
-                        <span className="card-title">{card.title}</span>
-                        {card.badge && <CardBadge {...card.badge} />}
-                      </div>
-                      {card.subtitle && <div className="card-subtitle">{card.subtitle}</div>}
-                    </div>
-                  </div>
-
-                  {/* Plan steps with status pips. */}
-                  {card.steps && <CardSteps steps={card.steps} />}
-
-                  {/* KPI tiles — value + label + optional delta. */}
-                  {card.metrics && <CardMetrics metrics={card.metrics} />}
-
-                  {/* Horizontal bar chart — auto-scaled to the largest value. */}
-                  {card.bars && <CardBars bars={card.bars} />}
-
-                  {/* Grouped sections with optional headings + facts/bullets/text. */}
-                  {card.sections && (
-                    <div className="card-sections">
-                      {card.sections.map((section, j) => (
-                        <div key={j} className="card-section">
-                          {section.heading && <div className="card-section-heading">{section.heading}</div>}
-                          {section.text && <div className="card-section-text">{section.text}</div>}
-                          {section.facts && <CardFacts facts={section.facts} />}
-                          {section.bullets && (
-                            <ul className="card-bullets">
-                              {section.bullets.map((b, k) => <li key={k}>{b}</li>)}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Flat facts at card root (legacy + still useful). */}
-                  {card.facts && <CardFacts facts={card.facts} />}
-
-                  {card.choice && (
-                    <label className="card-choice">
-                      <span>{card.choice.label}</span>
-                      <select
-                        value={card.choice.value}
-                        disabled={card.actionsDisabled}
-                        onChange={event => onCardChoice?.(message, event.target.value)}
-                      >
-                        {card.choice.options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-                      </select>
-                    </label>
-                  )}
-
-                  {/* Subtle metadata footer (e.g. "Generated by Cowork · 4:31 PM"). */}
-                  {card.footer && <div className="card-footer">{card.footer}</div>}
-
-                  {/* Action row. */}
-                  {card.actions && (
-                    <div className="card-actions">
-                      {card.actions.map((action, j) => {
-                        const interactive = typeof action === 'object'
-                        return (
-                          <span className="card-action-wrap" key={j}>
-                            <button
-                              type="button"
-                              className={`card-action-btn${action.primary ? ' card-action-primary' : ''}`}
-                              disabled={interactive && card.actionsDisabled}
-                              onClick={interactive ? () => onCardAction?.(message, action.id) : undefined}
-                            >{interactive ? action.label : action}</button>
-                            {interactive && action.primary && !card.actionsDisabled && <span className="card-action-hint"><DemoArrow direction="up" /></span>}
-                          </span>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
+                <AdaptiveCard key={i} card={card} onAction={action => onCardAction?.(message, action)} onChoice={value => onCardChoice?.(message, value)} />
               ))}
             </div>
           )}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { contacts, copilotAgents, copilotConversations, copilotPrompts, copilotReferences, currentUser, copilotAgent, dynamicsDemo } from '../data'
-import { Avatar, ChatMultiple, Check, ChevronRight, Close, DemoArrow, Edit, IconButton, Lock, McpWidget, PanelLeft, Plus, Search, Send, Share } from './common'
+import { AdaptiveCard, Avatar, ChatMultiple, Check, CheckCircle, ChevronRight, Close, DemoArrow, Edit, IconButton, Lock, McpWidget, PanelLeft, Plus, Search, Send, Share } from './common'
 import './CopilotView.css'
 import ShareToTeamsModal from './ShareToTeamsModal'
 
@@ -29,7 +29,7 @@ function sampleReply(text, mode, agent) {
     }
 }
 
-export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendingSharedMessageId }) {
+export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendingSharedMessageId, dynamicsUpdate, onShowDynamicsUpdate }) {
   const [conversations, setConversations] = useState(copilotConversations)
   const [activeId, setActiveId] = useState(null)
   const [agentId, setAgentId] = useState(null)
@@ -42,23 +42,47 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
   const [query, setQuery] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [referencesOpen, setReferencesOpen] = useState(false)
+  const [presentedUpdateId, setPresentedUpdateId] = useState(null)
   const inputRef = useRef(null)
   const messagesEndRef = useRef(null)
+  const updatesResultRef = useRef(null)
   const connectionTimers = useRef(new Set())
   const activeConversation = conversations.find(chat => chat.id === activeId)
   const agent = copilotAgents.find(item => item.id === agentId)
-  const messages = activeConversation?.messages || []
+  const sourceConversation = dynamicsUpdate && conversations.find(chat => chat.messages.some(message => message.id === dynamicsUpdate.sourceMessageId))
+  const updateMessage = dynamicsUpdate ? {
+    id: dynamicsUpdate.id,
+    role: 'system',
+    text: `Copilot has updated Dynamics MCP with the latest information from your Teams collaboration in ${dynamicsUpdate.chatName}.`,
+  } : null
+  const messages = [
+    ...(activeConversation?.messages || []),
+    ...(dynamicsUpdate && !dynamicsUpdate.shown && sourceConversation?.id === activeId
+      && !activeConversation.messages.some(message => message.id === dynamicsUpdate.id) ? [updateMessage] : []),
+  ]
+  const showingCollaborationResult = !!messages.at(-1)?.isCollaborationUpdate
   const isConnecting = messages.some(message => message.isConnecting)
   const filteredConversations = conversations.filter(chat =>
     `${chat.title} ${chat.messages.map(message => message.text).join(' ')}`.toLowerCase().includes(query.toLowerCase())
   )
 
+  if (!hidden && dynamicsUpdate && sourceConversation && presentedUpdateId !== dynamicsUpdate.id) {
+    setPresentedUpdateId(dynamicsUpdate.id)
+    setActiveId(sourceConversation.id)
+    setAgentId(null)
+    setMode('Work')
+    setInput('')
+    setDemoStep(null)
+    setReferencesOpen(false)
+  }
+
   useEffect(() => {
     if (!hidden) {
-      messagesEndRef.current?.scrollIntoView({ block: 'end' })
+      if (showingCollaborationResult) updatesResultRef.current?.scrollIntoView({ block: 'start' })
+      else messagesEndRef.current?.scrollIntoView({ block: 'end' })
       inputRef.current?.focus()
     }
-  }, [hidden, activeId, messages.length, isConnecting])
+  }, [hidden, activeId, messages.length, isConnecting, showingCollaborationResult])
 
   useEffect(() => {
     const timers = connectionTimers.current
@@ -145,6 +169,30 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
     setSharedMessages(prev => ({ ...prev, [messageToShare.id]: { messageId: id, chatId: chat.id } }))
     setDemoStep({ stage: 'open', messageId: messageToShare.id })
     setMessageToShare(null)
+  }
+
+  function showUpdates() {
+    if (!dynamicsUpdate || dynamicsUpdate.shown || !sourceConversation) return
+    const resultId = `${dynamicsUpdate.id}-result`
+    setConversations(prev => prev.map(chat => chat.id === sourceConversation.id && !chat.messages.some(message => message.id === resultId)
+      ? {
+        ...chat,
+        messages: [
+          ...chat.messages,
+          ...(!chat.messages.some(message => message.id === updateMessage.id) ? [updateMessage] : []),
+          { id: `${dynamicsUpdate.id}-request`, role: 'user', text: 'Show updates' },
+          {
+            id: resultId,
+            role: 'assistant',
+            text: `Here are the updated opportunities from ${dynamicsUpdate.chatName}, with confirmed ownership and close ETAs, followed by the projected revenue growth.`,
+            widget: dynamicsUpdate.widget,
+            cards: [dynamicsUpdate.projectionCard],
+            isCollaborationUpdate: true,
+          },
+        ],
+      }
+      : chat))
+    onShowDynamicsUpdate(dynamicsUpdate.id)
   }
 
   const composer = (
@@ -292,10 +340,22 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
               <div className="copilot-messages" role="log" aria-label="Copilot conversation" aria-live="polite" aria-busy={isConnecting}>
                 <h1>{activeConversation.title}</h1>
                 {messages.map((message, index) => {
+                  if (message.role === 'system') return (
+                    <article className="copilot-message copilot-system-message" key={message.id} role="status" aria-label="System message">
+                      <div className="copilot-system-heading"><CheckCircle size={16} /><span>System message</span></div>
+                      <p>{message.text}</p>
+                      {message.id === dynamicsUpdate?.id && !dynamicsUpdate.shown && (
+                        <div className="copilot-demo-action">
+                          <button type="button" className="copilot-show-updates" onClick={showUpdates}>Show updates</button>
+                          <span className="copilot-share-hint"><DemoArrow direction="left" /></span>
+                        </div>
+                      )}
+                    </article>
+                  )
                   const shared = sharedMessages[message.id]
                   const destination = shared && contacts.find(contact => contact.id === shared.chatId)
                   return (
-                  <article className={`copilot-message copilot-message-${message.role}`} key={index} aria-label={message.role === 'user' ? 'You' : agent?.name || 'Copilot'}>
+                  <article className={`copilot-message copilot-message-${message.role}`} key={message.id || index} ref={message.isCollaborationUpdate ? updatesResultRef : undefined} aria-label={message.role === 'user' ? 'You' : agent?.name || 'Copilot'}>
                     {message.role === 'assistant' && (
                       <div className="copilot-answer-author">
                         {agent ? <Avatar contact={agent} size={24} /> : <img src={logo} alt="" />}
@@ -304,6 +364,7 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
                     )}
                     <p role={message.isConnecting ? 'status' : undefined}>{message.text}</p>
                     {message.widget && <McpWidget widget={message.widget} />}
+                    {message.cards && <div className="copilot-projection">{message.cards.map((card, i) => <AdaptiveCard key={i} card={card} />)}</div>}
                     {message.sources?.length > 0 && (
                       <div className="copilot-sources" aria-label="Sample references">
                         {message.sources.map(source => (
@@ -313,7 +374,7 @@ export default function CopilotView({ hidden, onOpenChat, onShareMessage, pendin
                         ))}
                       </div>
                     )}
-                    {message.widget && (
+                    {message.widget && !message.isCollaborationUpdate && (
                       <div className="copilot-message-share">
                         <div className="copilot-demo-action">
                           <button

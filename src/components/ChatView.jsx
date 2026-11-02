@@ -88,6 +88,7 @@ export default function ChatView({
   setExtraMessages,
   navIntent,
   clearNavIntent,
+  onDynamicsUpdated,
 }) {
   const activeContact = contacts.find((c) => c.id === activeChatId)
   const baseMessages = messagesByContact[activeChatId] || []
@@ -122,7 +123,7 @@ export default function ChatView({
   const [threadRailOpen, setThreadRailOpen] = useState(false)
   const [highlightMessageId, setHighlightMessageId] = useState(null)
   const messagesEndRef = useRef(null)
-  const ownershipDemo = useOpportunityOwnershipDemo({ activeChatId, extraMessages, setExtraMessages })
+  const ownershipDemo = useOpportunityOwnershipDemo({ activeChatId, extraMessages, setExtraMessages, onDynamicsUpdated })
   const [ownershipDraftCursor, setOwnershipDraftCursor] = useState({ chatId: null, prompt: null })
 
   // Reset per-chat ephemeral state when activeChatId changes. Using the

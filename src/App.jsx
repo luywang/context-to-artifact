@@ -17,6 +17,7 @@ export default function App() {
   const [dynamicSessionMessages, setDynamicSessionMessages] = useState({})
   const [extraMessages, setExtraMessages] = useState({})
   const [pendingSharedMessage, setPendingSharedMessage] = useState(null)
+  const [dynamicsUpdate, setDynamicsUpdate] = useState(null)
   // Activity feed: persist which events the user has opened so unread decorations clear.
   const [activityEvents, setActivityEvents] = useState(seedActivityEvents)
   const [activeActivityId, setActiveActivityId] = useState(null)
@@ -70,6 +71,26 @@ export default function App() {
 
   const clearNavIntent = useCallback(() => setNavIntent(null), [])
 
+  const recordDynamicsUpdate = useCallback(update => {
+    setDynamicsUpdate(prev => prev?.id === update.id ? prev : {
+      ...update,
+      chatName: contacts.find(contact => contact.id === update.chatId).name,
+      opened: false,
+      shown: false,
+    })
+  }, [])
+
+  const selectView = useCallback(view => {
+    setActiveView(view)
+    if (view === 'copilot') {
+      setDynamicsUpdate(prev => prev ? { ...prev, opened: true } : prev)
+    }
+  }, [])
+
+  const showDynamicsUpdate = useCallback(id => {
+    setDynamicsUpdate(prev => prev?.id === id ? { ...prev, shown: true, opened: true } : prev)
+  }, [])
+
   const addSession = useCallback((agentId, session, messages) => {
     setSessions(prev => ({
       ...prev,
@@ -118,8 +139,9 @@ export default function App() {
       <div className="app-body">
         <NavRail
           activeView={activeView}
-          onSelectView={setActiveView}
+          onSelectView={selectView}
           activityUnreadCount={activityUnreadCount}
+          hintCopilot={activeView !== 'copilot' && !!dynamicsUpdate && !dynamicsUpdate.opened}
         />
         <div className="teams-workspace" hidden={activeView === 'copilot'}>
           {activeView === 'activity' ? (
@@ -149,12 +171,15 @@ export default function App() {
             setExtraMessages={setExtraMessages}
             navIntent={navIntent}
             clearNavIntent={clearNavIntent}
+            onDynamicsUpdated={recordDynamicsUpdate}
           />
         </div>
         <CopilotView
           hidden={activeView !== 'copilot'}
           onShareMessage={shareCopilotMessage}
           pendingSharedMessageId={pendingSharedMessage?.messageId}
+          dynamicsUpdate={dynamicsUpdate}
+          onShowDynamicsUpdate={showDynamicsUpdate}
           onOpenChat={(chatId, highlightMessageId) => {
             setActiveView('chat')
             selectChat(chatId)
@@ -180,6 +205,8 @@ export default function App() {
           <p>After confirmation, Copilot privately notifies the proposed owner. Two seconds later, their simulated acceptance appears as a public update with the final ownership widget.</p>
           <h3 className="fre-section-title">5. Project revenue</h3>
           <p>Ask the confirmed owners for close ETAs, approve Copilot's public offer to update the widget, then request a revenue projection. The group reacts to the chart with Like and Love.</p>
+          <h3 className="fre-section-title">6. Update Dynamics</h3>
+          <p>Approve Copilot's targeted Dynamics update card. Follow the arrow to Copilot on the left rail, then click Show updates to review the confirmed owners, close ETAs, and revenue projection.</p>
           <p className="fre-modal-footnote">Interactive prototype with fictional customer data. No live Dynamics or MCP connection.</p>
         </FreModal>
       )}

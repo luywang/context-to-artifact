@@ -41,7 +41,7 @@ function approvalCard(candidate, alternate = false) {
   }
 }
 
-export default function useOpportunityOwnershipDemo({ activeChatId, extraMessages, setExtraMessages }) {
+export default function useOpportunityOwnershipDemo({ activeChatId, extraMessages, setExtraMessages, onDynamicsUpdated }) {
   const timers = useRef(new Set())
   const handled = useRef(new Set())
   const chatMessages = extraMessages[activeChatId] || []
@@ -167,7 +167,26 @@ export default function useOpportunityOwnershipDemo({ activeChatId, extraMessage
               ownershipStage: index === demo.projectionReactions.length - 1 ? 'forecast-complete' : 'projection-reactions',
             } : item),
           }))
-        }, 2000 + index * 1200)
+          if (index === demo.projectionReactions.length - 1) {
+            append(chatId, flowId, [message(copilotAgent.id,
+              'Would you like me to update Dynamics through Dynamics MCP with the latest information from this Teams collaboration?',
+              {
+                ownershipStage: 'sync-approval',
+                targetedTo: 'me',
+                isPrivate: true,
+                cards: [{
+                  accentColor: '#5B5FC7',
+                  iconType: 'teams',
+                  title: 'Update Dynamics with the latest information?',
+                  subtitle: 'Save the confirmed owners and close ETAs for all four opportunities.',
+                  badge: { text: 'Awaiting your approval', tone: 'amber' },
+                  footer: 'Prototype update · No live Dynamics connection',
+                  actions: [{ id: 'sync-dynamics', label: 'Yes, update Dynamics', primary: true }],
+                }],
+              },
+            )])
+          }
+        }, (index + 1) * 500)
       })
     }
     return true
@@ -186,6 +205,33 @@ export default function useOpportunityOwnershipDemo({ activeChatId, extraMessage
   }
 
   function handleAction(source, action) {
+    if (source.id === latest?.id && stage === 'sync-approval' && action === 'sync-dynamics') {
+      if (handled.current.has(source.id)) return
+      handled.current.add(source.id)
+      setExtraMessages(prev => ({
+        ...prev,
+        [activeChatId]: prev[activeChatId].map(item => item.id === source.id ? {
+          ...item,
+          cards: item.cards.map(card => ({
+            ...card,
+            actionsDisabled: true,
+            badge: { text: 'Updated in Dynamics', tone: 'green' },
+          })),
+        } : item),
+      }))
+      append(activeChatId, root.id, [message(copilotAgent.id,
+        'Done — I have updated Dynamics with the confirmed owners and close ETAs. Open Copilot on the left rail to review the updated opportunities and revenue projection.',
+        { ownershipStage: 'synced', targetedTo: 'me', isPrivate: true },
+      )])
+      onDynamicsUpdated({
+        id: `dynamics-update-${root.id}-${activeChatId}`,
+        chatId: activeChatId,
+        sourceMessageId: root.id.replace(/^shared-/, ''),
+        widget: flowMessages.findLast(item => item.widget?.hasEtas).widget,
+        projectionCard: flowMessages.findLast(item => item.cards?.some(card => card.bars)).cards[0],
+      })
+      return
+    }
     if (source.id === latest?.id && stage === 'eta-approval' && action === 'update-etas') {
       if (handled.current.has(source.id)) return
       handled.current.add(source.id)
@@ -277,6 +323,8 @@ export default function useOpportunityOwnershipDemo({ activeChatId, extraMessage
     project: 'The widget now includes close ETAs. Ask Copilot to project revenue growth.',
     'projection-reactions': 'The group is reacting to the revenue projection...',
     'forecast-complete': 'Revenue projection shared. The group has reacted with Like and Love.',
+    'sync-approval': 'Only you can see the Dynamics update card. Click Yes to save the latest information.',
+    synced: 'Dynamics updated. Click Copilot on the left rail, then Show updates.',
     cancelled: 'Assignment cancelled. Tailspin Toys remains unassigned.',
   }
 
